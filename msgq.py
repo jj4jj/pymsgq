@@ -45,15 +45,16 @@ class Msgq(object):
         self.mqid = _msgget(key, flags)
         if self.mqid < 0:
             raise Exception('create msgq error:%s' % os.strerror(ctypes.get_errno()))
-        ds = _msgdsbuf() 
-        err = _msgctl(self.mqid, IPC_STAT, ctypes.byref(ds))
-        if err < 0:
-            raise Exception('get msgq stat error:%s' % os.strerror(ctypes.get_errno()))
-        if ds.msg_qbytes < max_msgq_buff_total_sz:
-            ds.msg_qbytes = max_msgq_buff_total_sz
-            err = _msgctl(self.mqid, IPC_SET, ctypes.byref(ds))
+        if create:
+            ds = _msgdsbuf() 
+            err = _msgctl(self.mqid, IPC_STAT, ctypes.byref(ds))
             if err < 0:
-                raise Exception('set msgq buffer error:%s' % os.strerror(ctypes.get_errno()))
+                raise Exception('get msgq stat error:%s' % os.strerror(ctypes.get_errno()))
+            if ds.msg_qbytes < max_msgq_buff_total_sz:
+                ds.msg_qbytes = max_msgq_buff_total_sz
+                err = _msgctl(self.mqid, IPC_SET, ctypes.byref(ds))
+                if err < 0:
+                    raise Exception('set msgq buffer error:%s' % os.strerror(ctypes.get_errno()))
         self.msgbuf = _msgbuf(max_msg_buff_sz)
         self.max_msg_size = max_msg_buff_sz
 
@@ -76,17 +77,17 @@ class Msgq(object):
         return err
 
     def recv(self, mtype=0, flags=IPC_NOWAIT):
-        err = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), mtype, flags)
-        if err == -1:
+        ntx = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), mtype, flags)
+        if ntx == -1:
             eno = ctypes.get_errno()
             if eno == errno.ENOMSG or eno == errno.EAGAIN or eno == errno.EINTR:
                 return 0,
-            if err == errno.E2BIG:
-                err = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), flags|MSG_NOERROR)
+            if eno == errno.E2BIG:
+                ntx = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), flags|MSG_NOERROR)
                 #error too big msg
                 return 0,
             raise Exception('recv msgq error:%s' % os.strerror(eno))
-        return self.msgbuf.mtype,err,self.msgbuf.mtext
+        return self.msgbuf.mtype,ntx,bytes(self.msgbuf.mtext)
 
 
 if __name__ == '__main__':
