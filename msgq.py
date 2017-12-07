@@ -39,9 +39,9 @@ class _msgdsbuf(ctypes.Structure):
 
 class Msgq(object):
     def __init__(self, key, create = False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz = 1024*1024*16):
-        flags = IPC_CREAT
+        flags = 0666
         if create:
-            flags = IPC_CREAT|0666
+            flags=IPC_CREAT|0666
         self.mqid = _msgget(key, flags)
         if self.mqid < 0:
             raise Exception('create msgq error:%s' % os.strerror(ctypes.get_errno()))
@@ -76,8 +76,7 @@ class Msgq(object):
         return err
 
     def recv(self, mtype=0, flags=IPC_NOWAIT):
-        self.msgbuf.mtype = mtype
-        err = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), flags)
+        err = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), mtype, flags)
         if err == -1:
             eno = ctypes.get_errno()
             if eno == errno.ENOMSG or eno == errno.EAGAIN or eno == errno.EINTR:
