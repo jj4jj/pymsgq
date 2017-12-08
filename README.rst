@@ -22,12 +22,20 @@ Installation
 Documentation
 -------------
 
+``
 sender(process 1):
+
 1. test_q = Msgq(123456, create=True)
+
 2. test_q.send(msg)
 
+
+
 receiver(process 2):
+
 1. test_q = Msgq(123456)
+
 2. mtype,mbuff = test_q.recv()
+``
 
 
