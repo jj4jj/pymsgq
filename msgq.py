@@ -21,7 +21,6 @@ Eazy to communicate with native program in Linux platform . :D
 import ctypes
 import os
 import errno
-import struct
 libc=ctypes.CDLL('libc.so.6',use_errno=True)
 _msgget = libc.msgget
 _msgsnd = libc.msgsnd
