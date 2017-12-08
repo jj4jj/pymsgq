@@ -56,7 +56,7 @@ class Msgq(object):
     def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=0666):
         flags=perms
         if create:
-            flags=IPC_CREAT|0666
+            flags=IPC_CREAT|perms
         self.mqid = _msgget(key, flags)
         if self.mqid < 0:
             raise Exception('create msgq error:%s' % os.strerror(ctypes.get_errno()))
@@ -116,12 +116,19 @@ if __name__ == '__main__':
     if sys.argv[1] == 'send':
         test_q = Msgq(123456, True)
         msg = 'hello[\x92\xE5]\0\x56 world!'
-        print 'send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321)
+        print 'case1: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321)
+        print 'case2: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg)
     else:
         test_q = Msgq(123456, False)
         mtype,mbuff = test_q.recv()
         sz = 0
         if mbuff:
             sz = len(mbuff)
-        print 'recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
+        print 'case1: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
+        mtype,mbuff = test_q.recv()
+        sz = 0
+        if mbuff:
+            sz = len(mbuff)
+        print 'case2: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
+
 
