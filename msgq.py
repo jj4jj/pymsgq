@@ -1,8 +1,23 @@
 #-*- coding:utf-8 -*-
+
+# Copyright 2017 jj4jj <resc@vip.qq.com> 
+#
+# Licensed under the MIT License; 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at https://opensource.org/licenses/MIT
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+""" A simple wrapper System V msgq interface
+
+Eazy to communicate with native program in Linux platform . :D
+
 """
-python msgq with libc system V interface
-eazy to communicate with native App in Linux platform
-"""
+
 import ctypes
 import os
 import errno
@@ -39,8 +54,8 @@ class _msgdsbuf(ctypes.Structure):
             ]
 
 class Msgq(object):
-    def __init__(self, key, create = False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz = 1024*1024*16):
-        flags = 0666
+    def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=0666):
+        flags=perms
         if create:
             flags=IPC_CREAT|0666
         self.mqid = _msgget(key, flags)
@@ -59,7 +74,9 @@ class Msgq(object):
         self.msgbuf = _msgbuf(max_msg_buff_sz)
         self.max_msg_size = max_msg_buff_sz
 
-    def send(self, buff, mtype, flags=IPC_NOWAIT):
+    def send(self, buff, mtype=0, flags=IPC_NOWAIT):
+        if mtype == 0:
+            mtype = id(self)
         self.msgbuf.mtype = mtype
         if len(buff) >  self.max_msg_size:
             raise Exception('send msgq buff too big (>%d) !' % self.max_msg_size)
@@ -100,9 +117,12 @@ if __name__ == '__main__':
     if sys.argv[1] == 'send':
         test_q = Msgq(123456, True)
         msg = 'hello[\x92\xE5]\0\x56 world!'
-        print 'send msg(%s) ret (0/-1):' % msg, test_q.send(msg, 54321)
+        print 'send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321)
     else:
         test_q = Msgq(123456, False)
         mtype,mbuff = test_q.recv()
-        print 'recv ret (msg type,msg buff):', mtype, mbuff
+        sz = 0
+        if mbuff:
+            sz = len(mbuff)
+        print 'recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
 
