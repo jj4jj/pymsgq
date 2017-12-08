@@ -6,6 +6,7 @@ eazy to communicate with native App in Linux platform
 import ctypes
 import os
 import errno
+import struct
 libc=ctypes.CDLL('libc.so.6',use_errno=True)
 _msgget = libc.msgget
 _msgsnd = libc.msgsnd
@@ -81,13 +82,13 @@ class Msgq(object):
         if ntx == -1:
             eno = ctypes.get_errno()
             if eno == errno.ENOMSG or eno == errno.EAGAIN or eno == errno.EINTR:
-                return 0,
+                return 0,None
             if eno == errno.E2BIG:
                 ntx = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), flags|MSG_NOERROR)
                 #error too big msg
-                return 0,
+                return 0,None
             raise Exception('recv msgq error:%s' % os.strerror(eno))
-        return self.msgbuf.mtype,ntx,bytes(self.msgbuf.mtext)
+        return self.msgbuf.mtype,ctypes.string_at(self.msgbuf.mtext, ntx)
 
 
 if __name__ == '__main__':
@@ -98,8 +99,10 @@ if __name__ == '__main__':
         sys.exit(-1)
     if sys.argv[1] == 'send':
         test_q = Msgq(123456, True)
-        print 'send ret:',test_q.send('hello', 54321)
+        msg = 'hello[\x92\xE5]\0\x56 world!'
+        print 'send msg(%s) ret (0/-1):' % msg, test_q.send(msg, 54321)
     else:
         test_q = Msgq(123456, False)
-        print 'recv ret:',test_q.recv()
+        mtype,mbuff = test_q.recv()
+        print 'recv ret (msg type,msg buff):', mtype, mbuff
 
