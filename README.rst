@@ -22,12 +22,15 @@ Installation
 Documentation
 -------------
 
-``python(c/c++ or other native program)
+::
+
+#python(c/c++ or other native program)
 #sender(process 1):
 mbuf='hello,world!'
 test_q = Msgq(123456, create=True)
 test_q.send(mbuf, mtype=888888)
 
+::
 
 #receiver(process 2):
 test_q = Msgq(123456)
