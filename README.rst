@@ -34,8 +34,8 @@ Documentation
 
     #receiver(process 2):
     test_q = Msgq(123456)
-    mtype,mbuff = test_q.recv(flags=0) #wait until a msg recieved
-    #mtype,mbuf = test_q.recv()  #return imediately
+    mtype,mbuf = test_q.recv(flags=0) #wait until a msg recieved
+    #mtype,mbuf = test_q.recv()  #this call return imediately
     #call will return mtype = 888888, mbuf = "hello,world!"
 
 
