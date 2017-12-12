@@ -1,9 +1,9 @@
 from setuptools import setup
 setup(  
       name='pymsgq',
-      version='0.10',
-      description="A simple wrapper System V msgq interface in linux",
-      keywords='system V msgq linux IPC',  
+      version='0.1.0',
+      description="A simple System V msgq interface for linux IPC",
+      keywords='system V msgq linux IPC msgsnd msgrcv msgget',  
       author='jj4jj',
       author_email='resc@vip.qq.com',
       license='MIT License',

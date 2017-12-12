@@ -22,20 +22,19 @@ Installation
 Documentation
 -------------
 
-``
-sender(process 1):
-
-1. test_q = Msgq(123456, create=True)
-
-2. test_q.send(msg)
-
+``python(c/c++ or other native program)
+#sender(process 1):
+mbuf='hello,world!'
+test_q = Msgq(123456, create=True)
+test_q.send(mbuf, mtype=888888)
 
 
-receiver(process 2):
+#receiver(process 2):
+test_q = Msgq(123456)
+mtype,mbuff = test_q.recv()  #return imediately
+mtype,mbuff = test_q.recv(flags=0) #wait until a msg recieved
+#return mtype = 888888, mbuff = "hello,world!"
 
-1. test_q = Msgq(123456)
-
-2. mtype,mbuff = test_q.recv()
 ``
 
 

@@ -57,6 +57,7 @@ class Msgq(object):
         flags=perms
         if create:
             flags=IPC_CREAT|perms
+        #########################
         self.mqid = _msgget(key, flags)
         if self.mqid < 0:
             raise Exception('create msgq error:%s' % os.strerror(ctypes.get_errno()))
