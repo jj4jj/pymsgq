@@ -60,14 +60,14 @@ class Msgq(object):
             flags=IPC_CREAT|perms
         #########################
         nkey = key
-        if isinstance(key, str):
+        if isinstance(key, str) or isinstance(key, unicode):
             if os.path.exists(key):
                 nkey =  _ftok(key, passive and 1 or 2)
             else:
-                raise Exception("create msgq error path key:%s", key)
+                raise Exception("create msgq error path key:%s" % key)
         self.mqid = _msgget(nkey, flags)
         if self.mqid < 0:
-            raise Exception('create msgq error:%s key:%d' % os.strerror(ctypes.get_errno()), nkey)
+            raise Exception('create msgq error:%s key:%s ftok:%d passive:%s' % (os.strerror(ctypes.get_errno()), str(key), nkey, str(passive)))
         if create:
             ds = _msgdsbuf() 
             err = _msgctl(self.mqid, IPC_STAT, ctypes.byref(ds))
