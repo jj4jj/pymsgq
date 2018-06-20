@@ -26,6 +26,7 @@ _msgget = libc.msgget
 _msgsnd = libc.msgsnd
 _msgrcv = libc.msgrcv
 _msgctl = libc.msgctl
+_ftok = libc.ftok
 ###########################################
 IPC_CREAT=512
 IPC_NOWAIT=2048
@@ -53,14 +54,20 @@ class _msgdsbuf(ctypes.Structure):
             ]
 
 class Msgq(object):
-    def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=0666):
+    def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=0666, passive = True):
         flags=perms
         if create:
             flags=IPC_CREAT|perms
         #########################
-        self.mqid = _msgget(key, flags)
+        nkey = key
+        if isinstance(key, str):
+            if os.path.exists(key):
+                nkey =  _ftok(key, passive and 1 or 2)
+            else:
+                raise Exception("create msgq error path key:%s", key)
+        self.mqid = _msgget(nkey, flags)
         if self.mqid < 0:
-            raise Exception('create msgq error:%s' % os.strerror(ctypes.get_errno()))
+            raise Exception('create msgq error:%s key:%d' % os.strerror(ctypes.get_errno()), nkey)
         if create:
             ds = _msgdsbuf() 
             err = _msgctl(self.mqid, IPC_STAT, ctypes.byref(ds))
@@ -111,25 +118,42 @@ class Msgq(object):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) == 1:
-        print 'Usage:%s <send|recv>'
-        print 'testing send and recv interface'
+        print('Usage:%s <send|recv|key_send|key_recv>' % sys.argv[0])
+        print('testing send and recv interface')
         sys.exit(-1)
     if sys.argv[1] == 'send':
         test_q = Msgq(123456, True)
         msg = 'hello[\x92\xE5]\0\x56 world!'
-        print 'case1: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321)
-        print 'case2: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg)
+        print('case1: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321))
+        print('case2: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg))
+    elif sys.argv[1] == 'key_send':
+        test_q = Msgq('/tmp', True)
+        msg = 'hello[\x92\xE5]\0\x56 world!'
+        print('case1: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321))
+        print('case2: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg))
+    elif sys.argv[1] == 'key_recv':
+        test_q = Msgq('/tmp', True)
+        mtype,mbuff = test_q.recv()
+        sz = 0
+        if mbuff:
+            sz = len(mbuff)
+        print('case1: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz)
+        mtype,mbuff = test_q.recv()
+        sz = 0
+        if mbuff:
+            sz = len(mbuff)
+        print('case2: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz)
     else:
         test_q = Msgq(123456, False)
         mtype,mbuff = test_q.recv()
         sz = 0
         if mbuff:
             sz = len(mbuff)
-        print 'case1: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
+        print('case1: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz)
         mtype,mbuff = test_q.recv()
         sz = 0
         if mbuff:
             sz = len(mbuff)
-        print 'case2: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz
+        print('case2: recv ret (msg type,msg buff,sz):', mtype, mbuff,sz)
 
 
