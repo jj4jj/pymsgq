@@ -17,10 +17,12 @@
 Eazy to communicate with native program in Linux platform . :D
 
 """
+from __future__ import unicode_literals
 
 import ctypes
 import os
 import errno
+import logging
 libc=ctypes.CDLL('libc.so.6',use_errno=True)
 _msgget = libc.msgget
 _msgsnd = libc.msgsnd
@@ -59,15 +61,19 @@ class Msgq(object):
         if create:
             flags=IPC_CREAT|perms
         #########################
-        nkey = key
+        mqkey = key
         if isinstance(key, str) or isinstance(key, unicode):
             if os.path.exists(key):
-                nkey =  _ftok(key, passive and 1 or 2)
+                proj_id = 2
+                if passive:
+                    proj_id = 1
+                mqkey =  _ftok(str(key), proj_id)
             else:
                 raise Exception("create msgq error path key:%s" % key)
-        self.mqid = _msgget(nkey, flags)
+            logging.debug('key path:%s passive:%s msgq key:%d proj:%d' % (key, str(passive), mqkey, proj_id))
+        self.mqid = _msgget(mqkey, flags)
         if self.mqid < 0:
-            raise Exception('create msgq error:%s key:%s ftok:%d passive:%s' % (os.strerror(ctypes.get_errno()), str(key), nkey, str(passive)))
+            raise Exception('create msgq error:%s key:%s ftok:%d passive:%s' % (os.strerror(ctypes.get_errno()), str(key), mqkey, str(passive)))
         if create:
             ds = _msgdsbuf() 
             err = _msgctl(self.mqid, IPC_STAT, ctypes.byref(ds))
@@ -118,10 +124,12 @@ class Msgq(object):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) == 1:
-        print('Usage:%s <send|recv|key_send|key_recv>' % sys.argv[0])
+        print('Usage:%s <send|recv|key_send|key_recv|ftok>' % sys.argv[0])
         print('testing send and recv interface')
         sys.exit(-1)
-    if sys.argv[1] == 'send':
+    if sys.argv[1] == 'ftok':
+        print(_ftok(sys.argv[2], int(sys.argv[3])))
+    elif sys.argv[1] == 'send':
         test_q = Msgq(123456, True)
         msg = 'hello[\x92\xE5]\0\x56 world!'
         print('case1: send msg(%s) (sz:%d) ret (0/-1):' % (msg,len(msg)), test_q.send(msg, 54321))
