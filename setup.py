@@ -1,7 +1,7 @@
 from setuptools import setup
 setup(  
       name='pymsgq',
-      version='0.1.6',
+      version='0.1.7',
       description="A simple System V msgq interface for linux IPC (msgq)",
       keywords='system V msgq linux IPC msgsnd msgrcv msgget',  
       author='jj4jj',
