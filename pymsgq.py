@@ -34,6 +34,7 @@ IPC_CREAT=512
 IPC_NOWAIT=2048
 IPC_STAT=2
 IPC_SET=1
+MSG_NOERROR=4096
 #msgqbuf
 def _msgbuf(size):
     class __msgbuf(ctypes.Structure):
