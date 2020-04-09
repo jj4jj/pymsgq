@@ -115,7 +115,7 @@ class Msgq(object):
             if eno == errno.ENOMSG or eno == errno.EAGAIN or eno == errno.EINTR:
                 return 0,None
             if eno == errno.E2BIG:
-                ntx = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), flags|MSG_NOERROR)
+                ntx = _msgrcv(self.mqid, ctypes.byref(self.msgbuf), ctypes.sizeof(self.msgbuf.mtext), mtype, flags|MSG_NOERROR)
                 #error too big msg
                 return 0,None
             raise Exception('recv msgq error:%s' % os.strerror(eno))
