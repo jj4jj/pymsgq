@@ -57,7 +57,8 @@ class _msgdsbuf(ctypes.Structure):
             ]
 
 class Msgq(object):
-    def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=0666, passive = True):
+    #438=0666
+    def __init__(self, key, create=False, max_msg_buff_sz=512*1024, max_msgq_buff_total_sz=1024*1024*16, perms=438, passive = True):
         flags=perms
         if create:
             flags=IPC_CREAT|perms
